@@ -1,0 +1,17 @@
+{
+  "@@locale": "pt",
+  "appTitle": "Mercado Local Açores",
+  "welcomeMessage": "Bem-vindo ao Mercado dos Açores",
+  "supportArtisans": "Apoie os nossos {count} artesãos locais",
+  "@supportArtisans": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "exploreIslands": "Explorar por Ilha",
+  "categories": "Categorias",
+  "syncError": "Erro ao ligar ao Odoo. Verifique o túnel adb.",
+  "noArtisans": "Nenhum artesão encontrado no Odoo."
+}

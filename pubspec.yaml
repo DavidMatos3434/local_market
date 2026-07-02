@@ -1,0 +1,48 @@
+name: local_market
+description: "Marketplace OS para artesãos dos Açores."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations: # Adicionado para suporte multilingual
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  
+  # Gestão de Estado
+  flutter_riverpod: ^2.5.1
+  
+  # Navegação
+  go_router: ^14.0.0
+  
+  # Networking
+  dio: ^5.4.0
+  http: ^1.2.0
+  
+  # Base de Dados Local (Cache Offline para as ilhas)
+  isar: ^3.1.0+7
+  isar_flutter_libs: ^3.1.0+7
+  path_provider: ^2.1.2
+  
+  # UI & Design
+  google_fonts: ^6.1.0
+  flutter_svg: ^2.0.9
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  
+  # Geradores de Código
+  build_runner: ^2.4.8
+  isar_generator: ^3.1.0+7
+  json_serializable: ^6.7.1
+  json_annotation: ^4.8.1
+
+flutter:
+  generate: true # Ativa a geração automática de ficheiros de tradução (l10n)
+  uses-material-design: true

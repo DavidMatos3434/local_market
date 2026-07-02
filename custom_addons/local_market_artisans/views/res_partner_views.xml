@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_partner_form_inherit_azores" model="ir.ui.view">
+        <field name="name">res.partner.form.inherit.azores</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <!-- Insere os campos num local garantido: após as etiquetas (tags) -->
+            <xpath expr="//field[@name='category_id']" position="after">
+                <group string="Local Market OS" name="local_market_group">
+                    <field name="x_is_artisan" string="É Artesão?"/>
+                    <field name="x_upa" string="Carta UPA" invisible="not x_is_artisan"/>
+                    <field name="x_island" string="Ilha" invisible="not x_is_artisan"/>
+                    <field name="x_geo_group" string="Grupo Geográfico" invisible="not x_is_artisan"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="action_res_partner_artisans" model="ir.actions.act_window">
+        <field name="name">Artesãos Açores</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode" >kanban,tree,form</field>
+        <field name="domain">[('x_is_artisan', '=', True)]</field>
+        <field name="context">{'default_x_is_artisan': True}</field>
+    </record>
+
+    <menuitem id="menu_local_market_root" name="Local Market OS" sequence="1"/>
+    <menuitem id="menu_artisans_list" name="Artesãos" parent="menu_local_market_root" action="action_res_partner_artisans" sequence="10"/>
+</odoo>

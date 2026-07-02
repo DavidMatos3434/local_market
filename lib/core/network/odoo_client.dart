@@ -1,0 +1,85 @@
+import 'package:dio/dio.dart';
+
+class OdooClient {
+  static const String serverIp = '192.168.1.69'; 
+  
+  final Dio _dio = Dio(BaseOptions(
+    baseUrl: 'http://$serverIp:8069', 
+    contentType: 'application/json',
+    connectTimeout: const Duration(seconds: 15),
+  ));
+
+  int? _uid;
+  final String _db = 'local_market_artisans';
+  final String _user = 'thermoenergetics@gmail.com';
+  final String _pass = 'admin';
+
+  Future<bool> authenticate() async {
+    try {
+      final response = await _dio.post('/jsonrpc', data: {
+        "jsonrpc": "2.0",
+        "method": "call",
+        "params": {"service": "common", "method": "login", "args": [_db, _user, _pass]},
+        "id": 1
+      });
+      if (response.data['error'] != null) return false;
+      _uid = response.data['result'];
+      return _uid != null;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<List<dynamic>> fetchArtisans({String langCode = 'pt_PT'}) async {
+    try {
+      if (_uid == null) await authenticate();
+      final response = await _dio.post('/jsonrpc', data: {
+        "jsonrpc": "2.0",
+        "method": "call",
+        "params": {
+          "service": "object",
+          "method": "execute_kw",
+          "args": [
+            _db, _uid, _pass,
+            'res.partner', 'search_read',
+            [[['x_is_artisan', '=', true]]],
+            {'fields': ['name', 'x_island', 'city', 'email'], 'context': {'lang': langCode}, 'limit': 100}
+          ]
+        },
+        "id": 2
+      });
+      return response.data['result'] ?? [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  /// Busca produtos de um artesão (empresa) específico
+  Future<List<dynamic>> fetchProductsByArtisan(int partnerId, {String langCode = 'pt_PT'}) async {
+    try {
+      if (_uid == null) await authenticate();
+      final response = await _dio.post('/jsonrpc', data: {
+        "jsonrpc": "2.0",
+        "method": "call",
+        "params": {
+          "service": "object",
+          "method": "execute_kw",
+          "args": [
+            _db, _uid, _pass,
+            'product.template', 'search_read',
+            // Filtra por artesão (a empresa associada ao produto)
+            [[['seller_ids.partner_id', '=', partnerId]]], 
+            {
+              'fields': ['name', 'list_price', 'categ_id', 'description_sale', 'image_1920'],
+              'context': {'lang': langCode},
+            }
+          ]
+        },
+        "id": 3
+      });
+      return response.data['result'] ?? [];
+    } catch (e) {
+      return [];
+    }
+  }
+}

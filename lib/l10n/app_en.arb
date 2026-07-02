@@ -1,0 +1,17 @@
+{
+  "@@locale": "en",
+  "appTitle": "Azores Local Market",
+  "welcomeMessage": "Welcome to the Azores Market",
+  "supportArtisans": "Support our {count} local artisans",
+  "@supportArtisans": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "exploreIslands": "Explore by Island",
+  "categories": "Categories",
+  "syncError": "Error connecting to Odoo. Check adb tunnel.",
+  "noArtisans": "No artisans found in Odoo."
+}
