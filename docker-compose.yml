@@ -1,0 +1,37 @@
+services:
+  vendor_db:
+    image: postgis/postgis:15-3.3
+    environment:
+      - POSTGRES_USER=odoo
+      - POSTGRES_PASSWORD=odoo
+      - POSTGRES_DB=postgres
+    volumes:
+      - vendor_db_data:/var/lib/postgresql/data
+    restart: always
+
+  vendor_odoo:
+    image: odoo:17.0
+    depends_on:
+      - vendor_db
+    ports:
+      - "8069:8069"
+    environment:
+      - HOST=vendor_db
+      - USER=odoo
+      - PASSWORD=odoo
+      - ADMIN_PASSWORD=admin
+    volumes:
+      - vendor_odoo_data:/var/lib/odoo
+      - ./custom_addons:/mnt/extra-addons
+    command: odoo --addons-path=/usr/lib/python3/dist-packages/odoo/addons,/mnt/extra-addons
+    restart: always
+
+  vendor_ai_agent:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    restart: always
+
+volumes:
+  vendor_db_data:
+  vendor_odoo_data:

@@ -1,0 +1,22 @@
+{
+  "@@locale": "pt",
+  "appTitle": "Mercado Local Açores",
+  "welcomeMessage": "Bem-vindo ao Mercado dos Açores",
+  "supportArtisans": "Apoie os nossos {count} artesãos locais",
+  "@supportArtisans": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "exploreIslands": "Explorar por Ilha",
+  "categories": "Categorias CADA",
+  "syncError": "Erro ao ligar ao Odoo. Verifique o túnel adb.",
+  "noArtisans": "Nenhum artesão encontrado no Odoo.",
+  "featuredArtisans": "Artesãos em Destaque",
+  "searchHint": "Pesquisar artesão ou produto...",
+  "viewDetails": "Ver detalhes",
+  "products": "Produtos",
+  "viewAll": "Ver todos"
+}
