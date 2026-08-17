@@ -56,13 +56,45 @@ class ArtisanDetailsScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Text(_safe(artisan['name']), textAlign: TextAlign.center, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  Text(_safe(artisan['x_island'], 'Açores'), style: const TextStyle(color: Color(0xFF003F87), fontWeight: FontWeight.w600)),
+                  Text(_safe(artisan['name']), textAlign: TextAlign.center, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 4),
+                  Text(_safe(artisan['x_island'], 'Açores'), style: const TextStyle(color: Color(0xFF003F87), fontWeight: FontWeight.w700, fontSize: 16)),
                 ],
               ),
             ),
+            
+            // BIOGRAFIA / DESCRIÇÃO DO ARTESÃO
+            if (_safe(artisan['comment']).isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.blueGrey[50],
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(Icons.info_outline, size: 18, color: Color(0xFF003F87)),
+                          SizedBox(width: 8),
+                          Text("Sobre o Artesão", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        _safe(artisan['comment']),
+                        style: const TextStyle(fontSize: 14, height: 1.5, color: Colors.black87),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
               child: Text(l10n.products, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             ),
             productsAsync.when(
@@ -103,20 +135,42 @@ class ArtisanDetailsScreen extends ConsumerWidget {
         return GestureDetector(
           onTap: () => context.push('/product', extra: p),
           child: Card(
+            elevation: 2,
+            shadowColor: Colors.black26,
             clipBehavior: Clip.antiAlias,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(child: SizedBox(width: double.infinity, child: _getOdooImage(p.imageUrl))),
+                Expanded(
+                  child: Stack(
+                    children: [
+                      SizedBox(width: double.infinity, child: _getOdooImage(p.imageUrl)),
+                      Positioned(
+                        top: 8, right: 8,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(color: Colors.white.withOpacity(0.9), borderRadius: BorderRadius.circular(20)),
+                          child: Text(p.category, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Color(0xFF003F87))),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 Padding(
-                  padding: const EdgeInsets.all(8.0),
+                  padding: const EdgeInsets.all(10.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(p.name, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
-                      const SizedBox(height: 4),
-                      Text('${p.price.toStringAsFixed(2)} €', style: const TextStyle(color: Color(0xFF003F87), fontWeight: FontWeight.bold)),
+                      Text(p.name, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, height: 1.2)),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('${p.price.toStringAsFixed(2)} €', style: const TextStyle(color: Color(0xFF003F87), fontWeight: FontWeight.w900, fontSize: 15)),
+                          const Icon(Icons.add_circle_outline, size: 20, color: Color(0xFF003F87)),
+                        ],
+                      ),
                     ],
                   ),
                 ),

@@ -16,23 +16,36 @@ class OdooClient {
 
   Future<bool> authenticate() async {
     try {
+      print("🌐 Tentando autenticar em http://$serverIp:8069...");
       final response = await _dio.post('/jsonrpc', data: {
         "jsonrpc": "2.0",
         "method": "call",
         "params": {"service": "common", "method": "login", "args": [_db, _user, _pass]},
         "id": 1
       });
-      if (response.data['error'] != null) return false;
+      
+      if (response.data['error'] != null) {
+        print("❌ Erro Odoo: ${response.data['error']}");
+        return false;
+      }
+      
       _uid = response.data['result'];
+      print("✅ Autenticado com UID: $_uid");
       return _uid != null;
     } catch (e) {
+      print("⚠️ Falha na autenticação: $e");
       return false;
     }
   }
 
   Future<List<dynamic>> fetchArtisans({String langCode = 'pt_PT'}) async {
     try {
-      if (_uid == null) await authenticate();
+      if (_uid == null) {
+        final authOk = await authenticate();
+        if (!authOk) return [];
+      }
+      
+      print("📦 Procurando artesãos...");
       final response = await _dio.post('/jsonrpc', data: {
         "jsonrpc": "2.0",
         "method": "call",
@@ -54,13 +67,19 @@ class OdooClient {
       });
       return response.data['result'] ?? [];
     } catch (e) {
+      print("⚠️ Erro ao procurar artesãos: $e");
       return [];
     }
   }
 
   Future<List<dynamic>> fetchCategories({String langCode = 'pt_PT'}) async {
     try {
-      if (_uid == null) await authenticate();
+      if (_uid == null) {
+        final authOk = await authenticate();
+        if (!authOk) return [];
+      }
+      
+      print("📂 Procurando categorias...");
       final response = await _dio.post('/jsonrpc', data: {
         "jsonrpc": "2.0",
         "method": "call",

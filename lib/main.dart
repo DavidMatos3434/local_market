@@ -93,7 +93,7 @@ class HomePage extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildHero(l10n),
+            _buildHero(l10n, artisansAsync.value?.length ?? 0),
             _buildSectionTitle(l10n.featuredArtisans),
             
             // LISTA DE ARTESÃOS COM FOTO REAL
@@ -121,7 +121,7 @@ class HomePage extends ConsumerWidget {
     );
   }
 
-  Widget _buildHero(AppLocalizations l10n) {
+  Widget _buildHero(AppLocalizations l10n, int artisanCount) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -134,7 +134,12 @@ class HomePage extends ConsumerWidget {
         children: [
           Text(l10n.welcomeMessage, style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
-          Text(l10n.supportArtisans(76), style: const TextStyle(color: Colors.white70, fontSize: 16)),
+          Text(
+            artisanCount > 0 
+                ? l10n.supportArtisans(artisanCount)
+                : "A carregar artesãos...", 
+            style: const TextStyle(color: Colors.white70, fontSize: 16)
+          ),
         ],
       ),
     );
