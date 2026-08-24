@@ -2,13 +2,12 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:local_market/l10n/generated/app_localizations.dart';
-import 'package:local_market/core/constants/market_data.dart';
 import 'package:local_market/core/network/odoo_providers.dart';
 import 'package:local_market/features/catalog/presentation/artisan_details_screen.dart';
 import 'package:local_market/features/catalog/presentation/product_detail_screen.dart';
+import 'package:local_market/features/catalog/models/artisan.dart';
 import 'package:local_market/features/catalog/models/product.dart';
 
 void main() {
@@ -24,7 +23,7 @@ final _router = GoRouter(
     GoRoute(
       path: '/artisan',
       builder: (context, state) {
-        final artisan = state.extra as Map<String, dynamic>;
+        final artisan = state.extra as Artisan;
         return ArtisanDetailsScreen(artisan: artisan);
       },
     ),
@@ -152,7 +151,7 @@ class HomePage extends ConsumerWidget {
     );
   }
 
-  Widget _buildArtisansList(BuildContext context, List<dynamic> artisans) {
+  Widget _buildArtisansList(BuildContext context, List<Artisan> artisans) {
     return SizedBox(
       height: 180,
       child: ListView.builder(
@@ -161,7 +160,7 @@ class HomePage extends ConsumerWidget {
         itemCount: artisans.length,
         itemBuilder: (context, index) {
           final a = artisans[index];
-          final String imageData = _toText(a['image_1920']);
+          final String? imageData = a.imageUrl;
 
           return GestureDetector(
             onTap: () => context.push('/artisan', extra: a), // Navega para o perfil
@@ -178,14 +177,14 @@ class HomePage extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(10),
                       child: SizedBox(
                         width: 70, height: 70,
-                        child: imageData.isNotEmpty 
+                        child: (imageData != null && imageData.isNotEmpty)
                           ? Image.memory(base64Decode(imageData), fit: BoxFit.cover)
                           : Container(color: Colors.blueGrey[50], child: const Icon(Icons.person, color: Color(0xFF003F87))),
                       ),
                     ),
                     const SizedBox(height: 12),
-                    Text(_toText(a['name'], '...'), textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-                    Text(_toText(a['x_island'], 'Açores'), style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                    Text(a.name, textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                    Text(a.island, style: const TextStyle(fontSize: 10, color: Colors.grey)),
                   ],
                 ),
               ),

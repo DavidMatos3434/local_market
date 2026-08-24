@@ -1,5 +1,12 @@
+import 'package:isar/isar.dart';
+
+part 'product.g.dart';
+
+@collection
 class Product {
-  final int id;
+  Id id;
+  @Index()
+  final int artisanId; // Novo campo para filtro offline
   final String name;
   final String category;
   final double price;
@@ -8,6 +15,7 @@ class Product {
 
   Product({
     required this.id,
+    required this.artisanId,
     required this.name,
     required this.category,
     required this.price,
@@ -15,9 +23,10 @@ class Product {
     this.description,
   });
 
-  factory Product.fromJson(Map<String, dynamic> json) {
+  factory Product.fromJson(Map<String, dynamic> json, int artisanId) {
     return Product(
       id: json['id'],
+      artisanId: artisanId,
       name: json['name']?.toString() ?? '',
       category: (json['categ_id'] is List) ? json['categ_id'][1] : '',
       price: (json['list_price'] as num?)?.toDouble() ?? 0.0,

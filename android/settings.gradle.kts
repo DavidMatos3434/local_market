@@ -1,3 +1,22 @@
+// Hack: Clear conflicting environment variables via reflection
+try {
+    val env = System.getenv()
+    val field = env.javaClass.getDeclaredField("m")
+    field.isAccessible = true
+    @Suppress("UNCHECKED_CAST")
+    val m = field.get(env) as MutableMap<String, String>
+    m.remove("ANDROID_PREFS_ROOT")
+} catch (e: Exception) {
+    try {
+        val processEnvironment = Class.forName("java.lang.ProcessEnvironment")
+        val field = processEnvironment.getDeclaredField("theCaseInsensitiveEnvironment")
+        field.isAccessible = true
+        @Suppress("UNCHECKED_CAST")
+        val m = field.get(null) as MutableMap<String, String>
+        m.remove("ANDROID_PREFS_ROOT")
+    } catch (e2: Exception) {}
+}
+
 pluginManagement {
     val flutterSdkPath =
         run {

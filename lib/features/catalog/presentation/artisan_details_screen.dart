@@ -4,17 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:local_market/core/network/odoo_providers.dart';
 import 'package:local_market/l10n/generated/app_localizations.dart'; // Import Absolute
+import 'package:local_market/features/catalog/models/artisan.dart';
 import 'package:local_market/features/catalog/models/product.dart';
 
 class ArtisanDetailsScreen extends ConsumerWidget {
-  final Map<String, dynamic> artisan;
+  final Artisan artisan;
 
   const ArtisanDetailsScreen({super.key, required this.artisan});
-
-  String _safe(dynamic value, [String fallback = ""]) {
-    if (value == null || value is bool) return fallback;
-    return value.toString();
-  }
 
   Widget _getOdooImage(String? imageData) {
     if (imageData != null && imageData.isNotEmpty) {
@@ -29,11 +25,11 @@ class ArtisanDetailsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final productsAsync = ref.watch(productsByArtisanProvider(artisan['id']));
+    final productsAsync = ref.watch(productsByArtisanProvider(artisan.id));
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(title: Text(_safe(artisan['name'], 'Perfil'))),
+      appBar: AppBar(title: Text(artisan.name)),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -52,19 +48,19 @@ class ArtisanDetailsScreen extends ConsumerWidget {
                     child: SizedBox(
                       width: 100, 
                       height: 100, 
-                      child: _getOdooImage(_safe(artisan['image_1920']))
+                      child: _getOdooImage(artisan.imageUrl)
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Text(_safe(artisan['name']), textAlign: TextAlign.center, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                  Text(artisan.name, textAlign: TextAlign.center, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
-                  Text(_safe(artisan['x_island'], 'Açores'), style: const TextStyle(color: Color(0xFF003F87), fontWeight: FontWeight.w700, fontSize: 16)),
+                  Text(artisan.island, style: const TextStyle(color: Color(0xFF003F87), fontWeight: FontWeight.w700, fontSize: 16)),
                 ],
               ),
             ),
             
             // BIOGRAFIA / DESCRIÇÃO DO ARTESÃO
-            if (_safe(artisan['comment']).isNotEmpty)
+            if (artisan.bio != null && artisan.bio!.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.all(20.0),
                 child: Container(
@@ -85,7 +81,7 @@ class ArtisanDetailsScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        _safe(artisan['comment']),
+                        artisan.bio!,
                         style: const TextStyle(fontSize: 14, height: 1.5, color: Colors.black87),
                       ),
                     ],

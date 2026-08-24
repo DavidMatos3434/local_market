@@ -1,5 +1,10 @@
+import 'package:isar/isar.dart';
+
+part 'artisan.g.dart';
+
+@collection
 class Artisan {
-  final String id;
+  Id id;
   final String name;
   final String island;
   final String geoGroup;
@@ -22,13 +27,13 @@ class Artisan {
   // Para quando convertermos o que vem do Odoo (JSON) para o Flutter
   factory Artisan.fromJson(Map<String, dynamic> json) {
     return Artisan(
-      id: json['id'].toString(),
+      id: json['id'],
       name: json['name'],
       island: json['x_island'] ?? 'Desconhecida', // 'x_' é o padrão do Odoo para campos custom
       geoGroup: json['x_geo_group'] ?? '',
       category: json['x_main_category'] ?? '',
-      bio: json['comment'],
-      imageUrl: json['image_1920'],
+      bio: (json['comment'] is String) ? json['comment'] : null,
+      imageUrl: (json['image_1920'] is String) ? json['image_1920'] : null,
     );
   }
 }

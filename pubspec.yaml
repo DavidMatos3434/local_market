@@ -23,7 +23,12 @@ dependencies:
   # Networking
   dio: ^5.4.0
   http: ^1.2.0
-  
+  path_provider: ^2.1.2
+
+  # Cache Offline (Isar)
+  isar: ^3.1.0
+  isar_flutter_libs: ^3.1.0
+
   # UI & Design
   google_fonts: ^6.3.0
   flutter_svg: ^2.0.10
@@ -35,6 +40,7 @@ dev_dependencies:
   
   # Geradores de Código
   build_runner: ^2.4.8
+  isar_generator: ^3.1.0
   json_serializable: ^6.8.0
   json_annotation: ^4.9.0
 
