@@ -1,3 +1,4 @@
+// Versão simplificada para Web (sem Isar)
 class Artisan {
   final int id;
   final String name;

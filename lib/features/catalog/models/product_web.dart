@@ -1,3 +1,4 @@
+// Versão simplificada para Web (sem Isar)
 class Product {
   final int id;
   final int artisanId;
