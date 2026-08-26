@@ -55,8 +55,12 @@ def main():
                     'x_is_artisan': True,
                     'x_island': row['x_island'],
                     'x_geo_group': row['x_geo_group'],
-                    'country_id': 185, 
                 }
+                
+                # Procurar ID de Portugal dinamicamente
+                pt_ids = execute('res.country', 'search', [['code', '=', 'PT']])
+                if pt_ids:
+                    vals['country_id'] = pt_ids[0]
                 
                 # 1. Verificar se já existe (Partner)
                 existing = execute('res.partner', 'search', [['name', '=', name]])

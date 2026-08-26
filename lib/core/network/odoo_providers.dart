@@ -79,3 +79,27 @@ final productsByArtisanProvider = FutureProvider.family<List<Product>, int>((ref
     return [];
   }
 });
+
+final allProductsProvider = FutureProvider<List<Product>>((ref) async {
+  final isar = await ref.watch(isarProvider.future);
+  final client = ref.watch(odooClientProvider);
+  final lang = ref.watch(odooLocaleProvider);
+
+  try {
+    final rawProducts = await client.fetchAllProducts(langCode: lang);
+    // Nota: Como não temos um artisanId único aqui, usamos 0 ou extraímos do JSON
+    final products = rawProducts.map((json) {
+      final compId = (json['company_id'] is List) ? json['company_id'][0] : 0;
+      return Product.fromJson(json, compId);
+    }).toList();
+
+    await isar.writeTxn(() async {
+      await isar.products.putAll(products);
+    });
+    
+    return products;
+  } catch (e) {
+    print("⚠️ Falha ao carregar catálogo global: $e.");
+    return await isar.products.where().findAll();
+  }
+});

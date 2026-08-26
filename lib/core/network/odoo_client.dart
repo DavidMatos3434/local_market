@@ -1,7 +1,8 @@
 import 'package:dio/dio.dart';
 
 class OdooClient {
-  static const String serverIp = '192.168.1.69'; 
+  // Usamos 127.0.0.1 para funcionar com 'adb reverse' via USB
+  static const String serverIp = '127.0.0.1'; 
   
   final Dio _dio = Dio(BaseOptions(
     baseUrl: 'http://$serverIp:8069', 
@@ -115,12 +116,40 @@ class OdooClient {
             'product.template', 'search_read',
             [[['company_id.partner_id', '=', artisanId]]], 
             {
-              'fields': ['name', 'list_price', 'categ_id', 'image_1920', 'description_sale'],
+              'fields': ['id', 'name', 'list_price', 'categ_id', 'image_1920', 'description_sale', 'company_id'],
               'context': {'lang': langCode}
             }
           ]
         },
         "id": 3
+      });
+      return response.data['result'] ?? [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  Future<List<dynamic>> fetchAllProducts({String langCode = 'pt_PT'}) async {
+    try {
+      if (_uid == null) await authenticate();
+      final response = await _dio.post('/jsonrpc', data: {
+        "jsonrpc": "2.0",
+        "method": "call",
+        "params": {
+          "service": "object",
+          "method": "execute_kw",
+          "args": [
+            _db, _uid, _pass,
+            'product.template', 'search_read',
+            [[['sale_ok', '=', true]]], 
+            {
+              'fields': ['id', 'name', 'list_price', 'categ_id', 'image_1920', 'description_sale', 'company_id'],
+              'context': {'lang': langCode},
+              'limit': 80
+            }
+          ]
+        },
+        "id": 5
       });
       return response.data['result'] ?? [];
     } catch (e) {
