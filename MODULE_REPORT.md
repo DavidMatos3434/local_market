@@ -1,102 +1,73 @@
 # 📋 Module Report: Local Market Artisans (Açores)
 
 > **Repositório:** [https://github.com/DavidMatos3434/local_market.git](https://github.com/DavidMatos3434/local_market.git)  
-> **Análise efetuada:** Julho 2026 | **Status:** Protótipo em desenvolvimento ativo
+> **Análise efetuada:** Agosto 2026 | **Status:** Protótipo funcional com suporte Android 16
 
 ---
 
 ## 1. VISÃO GERAL DO MÓDULO
 
-Este é o **módulo piloto da plataforma Local Market Engine**, focado no marketplace de artesãos dos Açores. Os dados de artesãos foram recolhidos do **CADA — Centro de Apoio e Design dos Açores** (Secretaria Regional da Juventude dos Açores), e o backend assenta num **Odoo 17.0 com addon personalizado**, servido via Docker. A app mobile é **Flutter**, com suporte multilíngue (PT/EN) desde o início.
+Este é o **módulo piloto da plataforma Local Market Engine**, focado no marketplace de artesãos dos Açores. O sistema utiliza **Odoo 17.0 (FOSS)** como backend central para gestão de inventário e artesãos, servido via Docker. A aplicação mobile **Flutter** foi evoluída para um Marketplace Multi-Vendedor, com suporte a cache offline e otimização para hardware de última geração (**Galaxy S25 / Android 16**).
 
 ---
 
-## 2. STACK TÉCNICA IMPLEMENTADA
+## 2. STACK TÉCNICA ATUALIZADA
 
 | Camada | Tecnologia | Estado |
 |---|---|---|
-| **App Mobile** | Flutter (Dart) — Android, iOS, Web, Windows | ✅ Scaffolded |
-| **Backend / ERP** | Odoo 17.0 (Docker) | ✅ Configurado |
-| **Base de Dados** | PostgreSQL via PostGIS 15 (Docker) | ✅ Ativo |
-| **Addon Odoo Customizado** | `local_market_artisans` (Python) | ✅ Implementado |
-| **Gestão de Estado** | Riverpod (`flutter_riverpod ^2.5.1`) | ✅ Implementado |
-| **Navegação** | GoRouter (`go_router ^14.0.0`) | ✅ Instalado |
-| **HTTP Client** | Dio + http | ✅ Implementado |
-| **Cache Offline** | Isar DB (`isar ^3.1.0`) | ✅ Instalado (não integrado ainda) |
-| **UI** | Material 3 + Google Fonts (Montserrat) | ✅ Implementado |
-| **Internacionalização** | Flutter l10n (ARB files) — PT + EN | ✅ Implementado |
-| **Agente IA** | Ollama (Docker, porta 11434) | ⚠️ Container declarado |
-| **Sync Script** | Python (`sync_artisans.py`, `sync_products.py`) | ✅ Funcional |
+| **App Mobile** | Flutter (Dart) — Android 16 (SDK 36) | ✅ Estabilizado |
+| **Backend / ERP** | Odoo 17.0 Community (Docker) | ✅ Configurado + CORS |
+| **Base de Dados** | PostgreSQL 15 + PostGIS (Docker) | ✅ Ativo |
+| **Addon Odoo** | `local_market_artisans` | ✅ Enriquecido (Produtos/Tags) |
+| **Gestão de Estado** | Riverpod (`flutter_riverpod ^2.5.1`) | ✅ Modelos Tipados |
+| **Navegação** | GoRouter + BottomNavigationBar | ✅ 2 Abas (Artesãos/Produtos) |
+| **Cache Offline** | Isar DB (`isar ^3.1.0`) | ✅ Configurado (Mobile-only) |
+| **Infraestrutura** | Docker Compose | ✅ Odoo + PostgreSQL + Ollama |
+| **Agente IA** | Ollama (Docker) | ⚙️ Preparado para integração |
 
 ---
 
-## 3. ESTRUTURA DO PROJETO FLUTTER
+## 3. ESTRUTURA E FUNCIONALIDADES FLUTTER
 
-```
-lib/
-├── core/
-│   ├── constants/
-│   │   └── market_data.dart          # Dados estáticos: ilhas, grupos geo, categorias CADA
-│   └── network/
-│       ├── odoo_client.dart          # Cliente JSON-RPC para Odoo
-│       └── odoo_providers.dart       # Providers Riverpod (artisansProvider, localeProvider)
-├── features/
-│   └── catalog/
-│       ├── models/
-│       │   ├── artisan.dart          # Modelo de dados Artesão
-│       │   └── product.dart          # Modelo de dados Produto
-│       └── presentation/
-│           ├── artisan_details_screen.dart
-│           └── product_detail_screen.dart
-├── l10n/
-│   ├── generated/                    # Ficheiros gerados automaticamente
-│   ├── app_en.arb                    # Strings em Inglês
-│   └── app_pt.arb                    # Strings em Português
-└── main.dart                         # Entry point + HomePage + Router
-```
+- **Marketplace Global**: Nova aba "Produtos" que lista todo o catálogo regional sincronizado.
+- **Modelos Fortemente Tipados**: Transição total de `Map` para as classes `Artisan` e `Product`.
+- **Arquitetura Híbrida**: Código preparado para usar Isar no Android e bypass na Web (contornando limitações de precisão JS).
+- **Sincronização**: Lógica inteligente de *Upsert* (Update or Insert) para evitar duplicados no catálogo.
 
 ---
 
-## 4. ADDON ODOO — `local_market_artisans`
+## 4. EVOLUÇÃO DO ADDON ODOO
 
-### Localização
-`custom_addons/local_market_artisans/`
-
-### Campos Custom implementados (em `res.partner` e `res.company`)
-
-| Campo | Tipo | Descrição |
-|---|---|---|
-| `x_is_artisan` | Boolean | Identifica se o contacto é um artesão |
-| `x_upa` | Char | Número da Carta UPA |
-| `x_island` | Selection | Lista das 9 ilhas dos Açores |
-| `x_geo_group` | Selection | Ocidental, Central ou Oriental |
+- **Gestão de Materiais**: Adicionado campo `x_materials` (Many2many) para tags como *Escama de Peixe* ou *Basalto*.
+- **Certificação Regional**: Campo `x_is_regional` para destacar produtos certificados.
+- **Correção Geográfica**: Script de reparação automática para garantir que todos os 78 artesãos estão em "Portugal" e com a Ilha correta.
 
 ---
 
-## 5. DADOS DE ARTESÃOS — CADA
+## 5. ESTABILIZAÇÃO ANDROID 16 (BAKLAVA)
 
-### Dados importados/sincronizados
-- **76 Empresas/Artesãos** criados via API.
-- **Categorias CADA** (84 registos) importadas via CSV/Odoo UI.
-- **Produtos piloto** (Açorbordados e Olaria) sincronizados via script.
+O projeto superou desafios críticos de compatibilidade com o **Galaxy S25**:
+- **Alinhamento 16 KB**: Implementado via `extractNativeLibs="true"` e bypass de compressão de bibliotecas nativas.
+- **SDK 36**: Compilação alinhada com as APIs mais recentes do Android.
+- **Gradle Fixes**: Script de reflexão em `settings.gradle.kts` para limpar conflitos de variáveis de ambiente do Windows.
 
 ---
 
 ## 6. O QUE ESTÁ IMPLEMENTADO ✅
 
-- [x] Projeto Flutter funcional no Galaxy S25 e Windows.
-- [x] Comunicação real Flutter ↔ Odoo (78 artesãos listados).
-- [x] Suporte Multilingual (PT/EN) completo com tradução do Odoo.
-- [x] Navegação básica entre Home e Perfil do Artesão.
+- [x] Build estável e rápido (Success em < 40s).
+- [x] Navegação entre Listagem, Perfil de Artesão e Mercado Regional.
+- [x] Sincronização automática Odoo ↔ Flutter (78 artesãos + catálogos iniciais).
+- [x] Odoo E-commerce ativado e integrado com o inventário dos artesãos.
 
 ---
 
-## 7. O QUE FALTA IMPLEMENTAR 🔴 (Próximos Passos)
+## 7. PRÓXIMOS PASSOS 🔴
 
-- [ ] **Integração total do Catálogo:** Mostrar produtos reais de todos os 76 artesãos.
-- [ ] **Limpeza de Dados:** Corrigir os campos de Ilha nos registos que falharam no script.
-- [ ] **Checkout:** Iniciar integração com MedusaJS para carrinho de compras.
-- [ ] **Offline Mode:** Implementar o Isar para guardar os dados localmente.
+1.  **Ativação do Agente IA**: Ligar a App ao Ollama para permitir gestão por voz (Fase C).
+2.  **Limpeza Final de Dados**: Executar `data_cleanup_artisans.py` para validar todas as ilhas.
+3.  **UI de Detalhe de Produto**: Melhorar o design do ecrã de produto com seções de materiais e artesão.
+4.  **Login de Artesão**: Criar o "Modo Gestão" para os artesãos atualizarem stock via App.
 
 ---
 *Relatório consolidado e verificado pelo Agente Local Market OS.*

@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
 
 class OdooClient {
-  // Usamos 127.0.0.1 para funcionar com 'adb reverse' via USB
-  static const String serverIp = '127.0.0.1'; 
+  // Usamos o IP real da máquina para evitar conflitos de localhost no Chrome
+  static const String serverIp = '192.168.1.69'; 
   
   final Dio _dio = Dio(BaseOptions(
     baseUrl: 'http://$serverIp:8069', 
