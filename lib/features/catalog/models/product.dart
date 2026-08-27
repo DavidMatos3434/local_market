@@ -18,14 +18,19 @@ class Product {
   });
 
   factory Product.fromJson(Map<String, dynamic> json, int artisanId) {
+    String _parseString(dynamic value) {
+      if (value == null || value is bool) return "";
+      return value.toString();
+    }
+
     return Product(
       id: json['id'],
       artisanId: artisanId,
-      name: json['name']?.toString() ?? '',
-      category: (json['categ_id'] is List) ? json['categ_id'][1] : '',
+      name: _parseString(json['name']),
+      category: (json['categ_id'] is List) ? _parseString(json['categ_id'][1]) : '',
       price: (json['list_price'] as num?)?.toDouble() ?? 0.0,
       imageUrl: (json['image_1920'] is String) ? json['image_1920'] : null,
-      description: (json['description_sale'] is String) ? json['description_sale'] : '',
+      description: _parseString(json['description_sale']),
     );
   }
 }

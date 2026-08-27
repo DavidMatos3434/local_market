@@ -7,20 +7,27 @@ import 'package:local_market/l10n/generated/app_localizations.dart'; // Import A
 import 'package:local_market/features/catalog/models/artisan.dart';
 import 'package:local_market/features/catalog/models/product.dart';
 
+import 'package:flutter_svg/flutter_svg.dart';
+
 class ArtisanDetailsScreen extends ConsumerWidget {
   final Artisan artisan;
 
   const ArtisanDetailsScreen({super.key, required this.artisan});
 
   Widget _getOdooImage(String? imageData) {
-    if (imageData != null && imageData.isNotEmpty) {
-      try {
-        return Image.memory(base64Decode(imageData), fit: BoxFit.cover);
-      } catch (e) {
-        return const Icon(Icons.broken_image);
-      }
+    if (imageData == null || imageData.isEmpty) {
+      return Container(color: Colors.grey[100], child: const Icon(Icons.image, color: Colors.grey));
     }
-    return Container(color: Colors.grey[100], child: const Icon(Icons.image, color: Colors.grey));
+    try {
+      final bytes = base64Decode(imageData);
+      final header = String.fromCharCodes(bytes.take(10));
+      if (header.contains('<?xml') || header.contains('<svg')) {
+        return SvgPicture.memory(bytes, fit: BoxFit.cover);
+      }
+      return Image.memory(bytes, fit: BoxFit.cover);
+    } catch (e) {
+      return const Icon(Icons.broken_image);
+    }
   }
 
   @override

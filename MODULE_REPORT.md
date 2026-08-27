@@ -1,73 +1,130 @@
 # 📋 Module Report: Local Market Artisans (Açores)
 
-> **Repositório:** [https://github.com/DavidMatos3434/local_market.git](https://github.com/DavidMatos3434/local_market.git)  
-> **Análise efetuada:** Agosto 2026 | **Status:** Protótipo funcional com suporte Android 16
+> **Repositório:** [https://github.com/DavidMatos3434/local_market.git](https://github.com/DavidMatos3434/local_market.git)
+> **Análise efetuada:** Agosto 2026 | **Status:** Protótipo funcional — navegação e catálogo operacionais
 
 ---
 
 ## 1. VISÃO GERAL DO MÓDULO
-
-Este é o **módulo piloto da plataforma Local Market Engine**, focado no marketplace de artesãos dos Açores. O sistema utiliza **Odoo 17.0 (FOSS)** como backend central para gestão de inventário e artesãos, servido via Docker. A aplicação mobile **Flutter** foi evoluída para um Marketplace Multi-Vendedor, com suporte a cache offline e otimização para hardware de última geração (**Galaxy S25 / Android 16**).
-
----
-
-## 2. STACK TÉCNICA ATUALIZADA
-
-| Camada | Tecnologia | Estado |
-|---|---|---|
-| **App Mobile** | Flutter (Dart) — Android 16 (SDK 36) | ✅ Estabilizado |
-| **Backend / ERP** | Odoo 17.0 Community (Docker) | ✅ Configurado + CORS |
-| **Base de Dados** | PostgreSQL 15 + PostGIS (Docker) | ✅ Ativo |
-| **Addon Odoo** | `local_market_artisans` | ✅ Enriquecido (Produtos/Tags) |
-| **Gestão de Estado** | Riverpod (`flutter_riverpod ^2.5.1`) | ✅ Modelos Tipados |
-| **Navegação** | GoRouter + BottomNavigationBar | ✅ 2 Abas (Artesãos/Produtos) |
-| **Cache Offline** | Isar DB (`isar ^3.1.0`) | ✅ Configurado (Mobile-only) |
-| **Infraestrutura** | Docker Compose | ✅ Odoo + PostgreSQL + Ollama |
-| **Agente IA** | Ollama (Docker) | ⚙️ Preparado para integração |
+Módulo piloto da plataforma Local Market Engine, focado no marketplace de artesãos dos Açores. O projeto evoluiu significativamente: passou de uma HomePage estática com lista de artesãos para um marketplace com duas abas, navegação completa via GoRouter, ecrãs de detalhe de artesão e produto, e um conjunto robusto de scripts Python para gestão e limpeza de dados no Odoo.
 
 ---
 
-## 3. ESTRUTURA E FUNCIONALIDADES FLUTTER
+## 2. STACK TÉCNICA — ESTADO ATUAL
 
-- **Marketplace Global**: Nova aba "Produtos" que lista todo o catálogo regional sincronizado.
-- **Modelos Fortemente Tipados**: Transição total de `Map` para as classes `Artisan` e `Product`.
-- **Arquitetura Híbrida**: Código preparado para usar Isar no Android e bypass na Web (contornando limitações de precisão JS).
-- **Sincronização**: Lógica inteligente de *Upsert* (Update or Insert) para evitar duplicados no catálogo.
-
----
-
-## 4. EVOLUÇÃO DO ADDON ODOO
-
-- **Gestão de Materiais**: Adicionado campo `x_materials` (Many2many) para tags como *Escama de Peixe* ou *Basalto*.
-- **Certificação Regional**: Campo `x_is_regional` para destacar produtos certificados.
-- **Correção Geográfica**: Script de reparação automática para garantir que todos os 78 artesãos estão em "Portugal" e com a Ilha correta.
-
----
-
-## 5. ESTABILIZAÇÃO ANDROID 16 (BAKLAVA)
-
-O projeto superou desafios críticos de compatibilidade com o **Galaxy S25**:
-- **Alinhamento 16 KB**: Implementado via `extractNativeLibs="true"` e bypass de compressão de bibliotecas nativas.
-- **SDK 36**: Compilação alinhada com as APIs mais recentes do Android.
-- **Gradle Fixes**: Script de reflexão em `settings.gradle.kts` para limpar conflitos de variáveis de ambiente do Windows.
+| Camada | Tecnologia | Estado | Notas |
+| :--- | :--- | :--- | :--- |
+| **App Mobile** | Flutter (Dart) | ✅ Funcional | Android 16 (SDK 36), minSdk 24 |
+| **Backend / ERP** | Odoo 17.0 Community (Docker) | ✅ Configurado | CORS ativado (`--cors='*'`) |
+| **Base de Dados** | PostgreSQL 15 + PostGIS (Docker) | ✅ Ativo | |
+| **Addon Odoo** | `local_market_artisans` v1.0 | ✅ Enriquecido | Novos campos produto |
+| **Gestão de Estado** | Riverpod `^2.5.1` | ✅ Modelos tipados | 4 providers funcionais |
+| **Navegação** | GoRouter `^14.0.0` + BottomNav | ✅ Implementado | 3 rotas: `/`, `/artisan`, `/product` |
+| **Cache Offline** | Isar `^3.1.0` | ⚠️ Instalado | Não integrado — zero uso em runtime |
+| **Localização** | Flutter l10n (ARB) | ✅ PT + EN | 9 strings + plural |
+| **Agente IA** | Ollama (Docker) | ⚠️ Container ativo | Não integrado com a app |
+| **TTS / Voz** | — | 🔴 Ausente | `flutter_tts` não instalado |
+| **Supabase** | — | 🔴 Ausente | Não iniciado |
+| **Stripe / Pagamentos** | — | 🔴 Ausente | Não iniciado |
 
 ---
 
-## 6. O QUE ESTÁ IMPLEMENTADO ✅
-
-- [x] Build estável e rápido (Success em < 40s).
-- [x] Navegação entre Listagem, Perfil de Artesão e Mercado Regional.
-- [x] Sincronização automática Odoo ↔ Flutter (78 artesãos + catálogos iniciais).
-- [x] Odoo E-commerce ativado e integrado com o inventário dos artesãos.
+## 3. ESTRUTURA FLUTTER — ATUAL
+```
+lib/
+├── core/
+│   ├── constants/
+│   │   └── market_data.dart              # 9 ilhas, 3 grupos geo, 12 categorias CADA
+│   └── network/
+│       ├── odoo_client.dart              # JSON-RPC client — 4 métodos
+│       └── odoo_providers.dart           # 4 providers Riverpod tipados
+├── features/
+│   └── catalog/
+│       ├── models/
+│       │   ├── artisan.dart              # Modelo mobile
+│       │   ├── artisan_web.dart          # Modelo web (sem Isar) ⚠️
+│       │   ├── product.dart              # Modelo mobile
+│       │   └── product_web.dart          # Modelo web ⚠️
+│       └── presentation/
+│           ├── artisan_details_screen.dart  # ✅ Ecrã de detalhe artesão
+│           └── product_detail_screen.dart   # ✅ Ecrã de detalhe produto
+├── l10n/
+│   ├── app_en.arb / app_pt.arb
+│   └── generated/                        # Auto-gerado
+└── main.dart                             # GoRouter + HomePage (2 abas)
+```
 
 ---
 
-## 7. PRÓXIMOS PASSOS 🔴
+## 4. O QUE ESTÁ IMPLEMENTADO ✅
 
-1.  **Ativação do Agente IA**: Ligar a App ao Ollama para permitir gestão por voz (Fase C).
-2.  **Limpeza Final de Dados**: Executar `data_cleanup_artisans.py` para validar todas as ilhas.
-3.  **UI de Detalhe de Produto**: Melhorar o design do ecrã de produto com seções de materiais e artesão.
-4.  **Login de Artesão**: Criar o "Modo Gestão" para os artesãos atualizarem stock via App.
+### Flutter / App
+- **Navegação GoRouter** com 3 rotas (`/`, `/artisan`, `/product`) usando `context.push` com `extra` tipado.
+- **BottomNavigationBar** com 2 abas: "Artesãos" e "Produtos".
+- **HomePage — Aba Artesãos**: Hero banner com contagem real, lista horizontal scrollável e grid de categorias.
+- **HomePage — Aba Produtos**: Grelha de 2 colunas com imagem, nome e preço (`allProductsProvider`).
+- **ArtisanDetailsScreen**: Foto, biografia e grelha de produtos do artesão.
+- **ProductDetailScreen**: Imagem full-width, categoria, preço e descrição.
+- **Modelos fortemente tipados** com `fromJson` robusto.
+- **Imagens Odoo em base64** funcionais.
+
+### Android / Build
+- **SDK 36 / Android 16 (Baklava)** — compileSdk e targetSdk alinhados.
+- **Alinhamento 16 KB** — `extractNativeLibs="true"` + `useLegacyPackaging = true`.
+- **Hack de env vars Windows** — remoção de `ANDROID_PREFS_ROOT` via reflexão.
+
+### Odoo Addon — `local_market_artisans`
+- **Modelos**: `res.partner`, `res.company` e `product.template` enriquecidos com campos geográficos e de materiais.
+- **Views XML** configuradas para os 3 modelos.
+- **CORS ativo** (`--cors='*'`).
+
+### Scripts Python de Dados
+- `sync_artisans.py`: Cria 77 artesãos.
+- `sync_products.py`: Upsert de produtos com download de imagens (⚠️ Bug identificado).
+- `data_cleanup_artisans.py`: Correção de ilhas e grupos geo via CSV.
+- `fix_country_and_sync.py`: Normalização do país para Portugal.
 
 ---
-*Relatório consolidado e verificado pelo Agente Local Market OS.*
+
+## 5. BUGS IDENTIFICADOS 🐛
+
+- **BUG 1 — `sync_products.py`**: Typo na linha 45 (`status_status` em vez de `status_code`) impede a sincronização de imagens.
+- **BUG 2 — `x_main_category`**: Campo pedido no `odoo_client.dart` mas inexistente no addon Odoo.
+- **BUG 3 — Modelos Redundantes**: Ficheiros `_web.dart` são dead code e causam confusão.
+- **BUG 4 — Segurança**: Credenciais (email/pass) expostas em texto claro no repositório.
+- **BUG 5 — IP Hardcoded**: `serverIp` fixo dificulta a utilização em diferentes redes.
+
+---
+
+## 6. MELHORIAS PRIORITÁRIAS 🔴
+
+### Imediatas (Fase de Estabilização)
+- **6.1**: Corrigir typo em `sync_products.py` e reimportar imagens.
+- **6.2**: Adicionar `x_main_category` ao addon Odoo e preencher via script.
+- **6.3**: Criar sistema de configuração para externalizar IPs e credenciais.
+- **6.4**: Eliminar ficheiros `_web.dart` e consolidar modelos.
+
+### Curto Prazo (Próximas 2 semanas)
+- **6.5**: Implementar ação real no botão "Interesse no Artigo" (WhatsApp/Email).
+- **6.6**: Adicionar filtros por ilha e categoria na aba de Produtos.
+- **6.7**: Integrar verdadeiramente o **Isar** para cache offline.
+- **6.8**: Tratar preços a zero ("Preço sob consulta").
+- **6.9**: Adicionar `flutter_tts` para suporte a agentes de voz.
+
+---
+
+## 7. DADOS — ESTADO ATUAL
+
+| Ficheiro | Registos | Estado |
+| :--- | :--- | :--- |
+| `import_artisans.csv` | 77 artesãos | ✅ Importados |
+| `import_products_acor.csv` | 5 produtos | ⚠️ Sem imagens (Bug 1) / Preço 0.0 |
+| `import_pottery_products.csv` | 5 produtos | ⚠️ Sem imagens (Bug 1) |
+| `cada_categories.csv` | 84 categorias | ✅ No Odoo e App |
+
+**Cobertura**: 10 produtos de 2 artesãos. 75 artesãos ainda sem catálogo.
+
+---
+
+## 8. RESUMO EXECUTIVO
+O projeto avançou bem na estrutura de Marketplace. As prioridades imediatas focam-se na **integridade dos dados** (imagens e categorias) e na **segurança/configuração**. O próximo grande salto será a integração da **IA (Ollama)** e o suporte **Offline (Isar)** para garantir que a app funciona em qualquer ponto das ilhas.

@@ -22,3 +22,5 @@ class ResPartner(models.Model):
         ('central', 'Grupo Central'),
         ('oriental', 'Grupo Oriental'),
     ], string='Grupo Geográfico')
+
+    x_main_category = fields.Char(string='Categoria Principal CADA')

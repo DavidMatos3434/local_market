@@ -12,6 +12,7 @@
                     <field name="x_upa" string="Carta UPA" invisible="not x_is_artisan"/>
                     <field name="x_island" string="Ilha" invisible="not x_is_artisan"/>
                     <field name="x_geo_group" string="Grupo Geográfico" invisible="not x_is_artisan"/>
+                    <field name="x_main_category" string="Categoria CADA" invisible="not x_is_artisan"/>
                 </group>
             </xpath>
         </field>

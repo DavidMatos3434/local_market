@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
+import '../config/app_config.dart';
 
 class OdooClient {
-  // Usamos o IP real da máquina para evitar conflitos de localhost no Chrome
-  static const String serverIp = '192.168.1.69'; 
+  static const String serverIp = AppConfig.odooIp; 
   
   final Dio _dio = Dio(BaseOptions(
     baseUrl: 'http://$serverIp:8069', 
@@ -11,9 +11,9 @@ class OdooClient {
   ));
 
   int? _uid;
-  final String _db = 'local_market_artisans';
-  final String _user = 'thermoenergetics@gmail.com';
-  final String _pass = 'admin';
+  final String _db = AppConfig.odooDb;
+  final String _user = AppConfig.odooUser;
+  final String _pass = AppConfig.odooPass;
 
   Future<bool> authenticate() async {
     try {

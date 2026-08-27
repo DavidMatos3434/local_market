@@ -23,7 +23,7 @@ services:
     volumes:
       - vendor_odoo_data:/var/lib/odoo
       - ./custom_addons:/mnt/extra-addons
-    command: odoo --addons-path=/usr/lib/python3/dist-packages/odoo/addons,/mnt/extra-addons --cors='*'
+    command: odoo --addons-path=/usr/lib/python3/dist-packages/odoo/addons,/mnt/extra-addons
     restart: always
 
   vendor_ai_agent:

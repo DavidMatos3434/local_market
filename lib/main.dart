@@ -10,6 +10,8 @@ import 'package:local_market/features/catalog/presentation/product_detail_screen
 import 'package:local_market/features/catalog/models/artisan.dart';
 import 'package:local_market/features/catalog/models/product.dart';
 
+import 'package:flutter_svg/flutter_svg.dart';
+
 void main() {
   runApp(const ProviderScope(child: LocalMarketApp()));
 }
@@ -219,6 +221,24 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 
+  Widget _buildOdooImage(String? base64String, {double? width, double? height, BoxFit fit = BoxFit.cover}) {
+    if (base64String == null || base64String.isEmpty) {
+      return Container(color: Colors.blueGrey[50], child: const Icon(Icons.person, color: Color(0xFF003F87)));
+    }
+
+    try {
+      final bytes = base64Decode(base64String);
+      // Detetar se é um SVG (começa com <?xml ou <svg)
+      final header = String.fromCharCodes(bytes.take(10));
+      if (header.contains('<?xml') || header.contains('<svg')) {
+        return SvgPicture.memory(bytes, width: width, height: height, fit: fit);
+      }
+      return Image.memory(bytes, width: width, height: height, fit: fit);
+    } catch (e) {
+      return const Icon(Icons.broken_image);
+    }
+  }
+
   Widget _buildArtisansList(BuildContext context, List<Artisan> artisans) {
     return SizedBox(
       height: 180,
@@ -228,7 +248,6 @@ class _HomePageState extends ConsumerState<HomePage> {
         itemCount: artisans.length,
         itemBuilder: (context, index) {
           final a = artisans[index];
-          final String? imageData = a.imageUrl;
 
           return GestureDetector(
             onTap: () => context.push('/artisan', extra: a), 
@@ -245,9 +264,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                       borderRadius: BorderRadius.circular(10),
                       child: SizedBox(
                         width: 70, height: 70,
-                        child: (imageData != null && imageData.isNotEmpty)
-                          ? Image.memory(base64Decode(imageData), fit: BoxFit.cover)
-                          : Container(color: Colors.blueGrey[50], child: const Icon(Icons.person, color: Color(0xFF003F87))),
+                        child: _buildOdooImage(a.imageUrl),
                       ),
                     ),
                     const SizedBox(height: 12),

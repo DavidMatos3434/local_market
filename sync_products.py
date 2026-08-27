@@ -42,7 +42,7 @@ def execute(model, method, *args, **kwargs):
 def download_image_as_base64(url):
     try:
         response = requests.get(url, timeout=10)
-        if response.status_status == 200:
+        if response.status_code == 200:
             return base64.b64encode(response.content).decode('utf-8')
     except:
         pass
