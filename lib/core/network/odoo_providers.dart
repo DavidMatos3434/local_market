@@ -4,7 +4,11 @@ import 'odoo_client.dart';
 import '../../features/catalog/models/product.dart';
 import '../../features/catalog/models/artisan.dart';
 
+import '../services/tts_service.dart';
+
 final odooClientProvider = Provider((ref) => OdooClient());
+
+final ttsProvider = Provider((ref) => TtsService());
 
 final odooLocaleProvider = Provider<String>((ref) {
   final locale = PlatformDispatcher.instance.locale;

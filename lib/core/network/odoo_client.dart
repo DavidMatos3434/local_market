@@ -58,7 +58,7 @@ class OdooClient {
             'res.partner', 'search_read',
             [[['x_is_artisan', '=', true]]],
             {
-              'fields': ['id', 'name', 'x_island', 'x_geo_group', 'x_main_category', 'comment', 'image_1920'],
+              'fields': ['id', 'name', 'x_island', 'x_geo_group', 'x_main_category', 'comment', 'image_1920', 'phone', 'mobile'],
               'context': {'lang': langCode},
               'limit': 100
             }
