@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:local_market/l10n/generated/app_localizations.dart';
 import 'package:local_market/core/network/odoo_providers.dart';
+import 'package:local_market/core/constants/market_data.dart';
 import 'package:local_market/features/catalog/presentation/artisan_details_screen.dart';
 import 'package:local_market/features/catalog/presentation/product_detail_screen.dart';
 import 'package:local_market/features/catalog/models/artisan.dart';
@@ -72,6 +73,8 @@ class HomePage extends ConsumerStatefulWidget {
 
 class _HomePageState extends ConsumerState<HomePage> {
   int _selectedIndex = 0;
+  String? _selectedIsland;
+  String? _selectedCategory;
 
   String _toText(dynamic value, [String fallback = ""]) {
     if (value == null || value is bool) return fallback;
@@ -143,50 +146,123 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   Widget _buildCatalogScreen(AppLocalizations l10n) {
     final productsAsync = ref.watch(allProductsProvider);
+    final artisansAsync = ref.watch(artisansProvider);
 
-    return productsAsync.when(
-      data: (products) => GridView.builder(
-        padding: const EdgeInsets.all(16),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2, 
-          crossAxisSpacing: 12, 
-          mainAxisSpacing: 12, 
-          childAspectRatio: 0.75,
-        ),
-        itemCount: products.length,
-        itemBuilder: (context, index) {
-          final p = products[index];
-          return GestureDetector(
-            onTap: () => context.push('/product', extra: p),
-            child: Card(
-              clipBehavior: Clip.antiAlias,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: p.imageUrl != null && p.imageUrl!.isNotEmpty
-                        ? Image.memory(base64Decode(p.imageUrl!), fit: BoxFit.cover, width: double.infinity)
-                        : Container(color: Colors.grey[200], child: const Icon(Icons.image, color: Colors.grey)),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(p.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                        Text('${p.price.toStringAsFixed(2)} €', style: const TextStyle(color: Color(0xFF003F87), fontWeight: FontWeight.bold)),
-                      ],
+    return Column(
+      children: [
+        _buildFilterBar(),
+        Expanded(
+          child: productsAsync.when(
+            data: (products) {
+              var filteredProducts = products;
+              
+              if (_selectedIsland != null && artisansAsync.hasValue) {
+                final artisanIdsInIsland = artisansAsync.value!
+                    .where((a) => a.island == _selectedIsland)
+                    .map((a) => a.id)
+                    .toSet();
+                filteredProducts = filteredProducts.where((p) => artisanIdsInIsland.contains(p.artisanId)).toList();
+              }
+              
+              if (_selectedCategory != null) {
+                filteredProducts = filteredProducts.where((p) => p.category.contains(_selectedCategory!)).toList();
+              }
+
+              if (filteredProducts.isEmpty) {
+                return const Center(child: Text("Nenhum produto encontrado com estes filtros."));
+              }
+
+              return GridView.builder(
+                padding: const EdgeInsets.all(16),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2, 
+                  crossAxisSpacing: 12, 
+                  mainAxisSpacing: 12, 
+                  childAspectRatio: 0.75,
+                ),
+                itemCount: filteredProducts.length,
+                itemBuilder: (context, index) {
+                  final p = filteredProducts[index];
+                  return GestureDetector(
+                    onTap: () => context.push('/product', extra: p),
+                    child: Card(
+                      clipBehavior: Clip.antiAlias,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: p.imageUrl != null && p.imageUrl!.isNotEmpty
+                                ? _buildOdooImage(p.imageUrl!)
+                                : Container(color: Colors.grey[200], child: const Icon(Icons.image, color: Colors.grey)),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(p.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                                Text(
+                                  p.price > 0 ? '${p.price.toStringAsFixed(2)} €' : "Preço sob consulta", 
+                                  style: const TextStyle(color: Color(0xFF003F87), fontWeight: FontWeight.bold)
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
+                  );
+                },
+              );
+            },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (e, s) => const Center(child: Text("Erro ao carregar catálogo")),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFilterBar() {
+    final islands = MarketData.geoGroups.values.expand((e) => e).toList();
+    final categories = MarketData.categories.keys.toList();
+
+    return Container(
+      height: 60,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2))],
       ),
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, s) => Center(child: Text("Erro ao carregar catálogo")),
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: [
+          // Filtro de Ilha
+          DropdownButton<String>(
+            hint: const Text("Ilha"),
+            value: _selectedIsland,
+            underline: const SizedBox(),
+            items: [
+              const DropdownMenuItem(value: null, child: Text("Todas as Ilhas")),
+              ...islands.map((i) => DropdownMenuItem(value: i, child: Text(i))),
+            ],
+            onChanged: (val) => setState(() => _selectedIsland = val),
+          ),
+          const SizedBox(width: 20),
+          // Filtro de Categoria
+          DropdownButton<String>(
+            hint: const Text("Categoria"),
+            value: _selectedCategory,
+            underline: const SizedBox(),
+            items: [
+              const DropdownMenuItem(value: null, child: Text("Todas as Categorias")),
+              ...categories.map((c) => DropdownMenuItem(value: c, child: Text(c))),
+            ],
+            onChanged: (val) => setState(() => _selectedCategory = val),
+          ),
+        ],
+      ),
     );
   }
 

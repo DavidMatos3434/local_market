@@ -44,9 +44,17 @@ def download_image_as_base64(url):
         response = requests.get(url, timeout=10)
         if response.status_code == 200:
             return base64.b64encode(response.content).decode('utf-8')
-    except:
-        pass
+    except Exception as e:
+        print(f"   ⚠️ Erro ao descarregar imagem: {e}")
     return False
+
+def get_or_create_category(categ_name, parent_id=False):
+    categ_ids = execute('product.category', 'search', [('name', '=', categ_name), ('parent_id', '=', parent_id)])
+    if categ_ids:
+        return categ_ids[0]
+    else:
+        print(f"   📂 Criando categoria: {categ_name}")
+        return execute('product.category', 'create', {'name': categ_name, 'parent_id': parent_id})
 
 def sync_csv(filename):
     print(f"\n📄 Lendo ficheiro: {filename}")
@@ -66,15 +74,17 @@ def sync_csv(filename):
                 cid = company_ids[0]
 
                 # Garantir que a empresa está em Portugal
-                pt_ids = execute('res.country', 'search', [['code', '=', 'PT']])
+                pt_ids = execute('res.country', 'search', [('code', '=', 'PT')])
                 if pt_ids:
                     execute('res.company', 'write', [cid], {'country_id': pt_ids[0]})
 
-                # 2. Buscar/Criar Categoria (Simplificado: pega a última parte)
+                # 2. Buscar/Criar Categoria (Hierárquica)
                 categ_path = row['categ_id'].split('/')
-                last_categ = categ_path[-1].strip()
-                categ_ids = execute('product.category', 'search', [('name', '=', last_categ)])
-                categ_id = categ_ids[0] if categ_ids else 1 # Fallback para All
+                current_parent = False
+                for part in categ_path:
+                    current_parent = get_or_create_category(part.strip(), current_parent)
+                
+                categ_id = current_parent
 
                 # 3. Verificar Duplicados
                 exists = execute('product.template', 'search', [('name', '=', prod_name), ('company_id', '=', cid)])
@@ -85,7 +95,18 @@ def sync_csv(filename):
                         'list_price': float(row['list_price']),
                         'standard_price': float(row.get('standard_price', 0)),
                         'categ_id': categ_id,
+                        'sale_ok': True,
+                        'website_published': True, # Publicar automaticamente no E-commerce
                     }
+                    
+                    # Se não tiver imagem no Odoo, tenta colocar
+                    product_data = execute('product.template', 'read', [pid], ['image_1920'])
+                    if not product_data or not product_data[0].get('image_1920'):
+                        if row.get('image_1920'):
+                            img_data = download_image_as_base64(row['image_1920'])
+                            if img_data:
+                                vals['image_1920'] = img_data
+
                     execute('product.template', 'write', [pid], vals)
                 else:
                     print(f"   ➕ Criando novo...")
@@ -96,9 +117,10 @@ def sync_csv(filename):
                         'company_id': cid,
                         'categ_id': categ_id,
                         'detailed_type': 'product',
+                        'sale_ok': True,
+                        'website_published': True,
                     }
                     
-                    # Tentar carregar imagem se houver URL
                     if row.get('image_1920'):
                         img_data = download_image_as_base64(row['image_1920'])
                         if img_data:
@@ -112,7 +134,6 @@ def sync_csv(filename):
 def main():
     print("🚀 Sincronização Inteligente de Catálogo iniciada...")
     
-    # Lista de ficheiros para sincronizar
     files = [
         'import_products_acor.csv',
         'import_pottery_products.csv'

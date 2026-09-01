@@ -1,14 +1,58 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/product.dart';
+import '../models/artisan.dart';
+import '../../../core/network/odoo_providers.dart';
 
-class ProductDetailScreen extends StatelessWidget {
+import 'package:flutter_svg/flutter_svg.dart';
+
+class ProductDetailScreen extends ConsumerWidget {
   final Product product;
 
   const ProductDetailScreen({super.key, required this.product});
 
+  Widget _buildOdooImage(String? base64String) {
+    if (base64String == null || base64String.isEmpty) {
+      return Container(
+        width: double.infinity,
+        height: 300,
+        color: Colors.grey[200],
+        child: const Icon(Icons.image, size: 100, color: Colors.grey),
+      );
+    }
+
+    try {
+      final bytes = base64Decode(base64String);
+      final header = String.fromCharCodes(bytes.take(10));
+      if (header.contains('<?xml') || header.contains('<svg')) {
+        return SvgPicture.memory(bytes, width: double.infinity, height: 350, fit: BoxFit.contain);
+      }
+      return Image.memory(bytes, width: double.infinity, height: 350, fit: BoxFit.cover);
+    } catch (e) {
+      return const SizedBox(height: 300, child: Center(child: Icon(Icons.broken_image)));
+    }
+  }
+
+  Future<void> _launchWhatsApp(String phone, String productName) async {
+    final message = "Olá! Tenho interesse no artigo: $productName. Ainda está disponível?";
+    final url = "https://wa.me/${phone.replaceAll(RegExp(r'[^0-9]'), '')}?text=${Uri.encodeComponent(message)}";
+    if (await canLaunchUrl(Uri.parse(url))) {
+      await launchUrl(Uri.parse(url));
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final artisansAsync = ref.watch(artisansProvider);
+    final artisan = artisansAsync.value?.firstWhere((a) => a.id == product.artisanId, 
+      orElse: () => Artisan(id: 0, name: "Artesão Local", island: "Açores", geoGroup: "", category: ""));
+
+    final displayPrice = product.price > 0 
+        ? '${product.price.toStringAsFixed(2)} €' 
+        : "Preço sob consulta";
+
     return Scaffold(
       appBar: AppBar(
         title: Text(product.name),
@@ -19,20 +63,7 @@ class ProductDetailScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Imagem do Produto (Base64 do Odoo)
-            if (product.imageUrl != null && product.imageUrl!.isNotEmpty)
-              Image.memory(
-                base64Decode(product.imageUrl!),
-                width: double.infinity,
-                height: 350,
-                fit: BoxFit.cover,
-              )
-            else
-              Container(
-                width: double.infinity,
-                height: 300,
-                color: Colors.grey[200],
-                child: const Icon(Icons.image, size: 100, color: Colors.grey),
-              ),
+            _buildOdooImage(product.imageUrl),
 
             Padding(
               padding: const EdgeInsets.all(24.0),
@@ -50,7 +81,7 @@ class ProductDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    '${product.price.toStringAsFixed(2)} €',
+                    displayPrice,
                     style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Color(0xFF003F87)),
                   ),
                   const Divider(height: 40),
@@ -72,11 +103,11 @@ class ProductDetailScreen extends StatelessWidget {
           ],
         ),
       ),
-      bottomSheet: _buildPurchaseBar(context),
+      bottomSheet: _buildPurchaseBar(context, artisan),
     );
   }
 
-  Widget _buildPurchaseBar(BuildContext context) {
+  Widget _buildPurchaseBar(BuildContext context, Artisan? artisan) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -86,10 +117,13 @@ class ProductDetailScreen extends StatelessWidget {
       child: SafeArea(
         child: ElevatedButton(
           onPressed: () {
-            // Futuro: Adicionar ao carrinho
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Funcionalidade de compra em breve!")),
-            );
+            if (artisan != null && artisan.phone != null && artisan.phone!.isNotEmpty) {
+              _launchWhatsApp(artisan.phone!, product.name);
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Contacto do artesão não disponível.")),
+              );
+            }
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF003F87),
@@ -97,7 +131,7 @@ class ProductDetailScreen extends StatelessWidget {
             minimumSize: const Size(double.infinity, 56),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
-          child: const Text("Interesse no Artigo", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          child: const Text("Interesse no Artigo (WhatsApp)", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
         ),
       ),
     );

@@ -6,6 +6,7 @@ class Artisan {
   final String category;
   final String? bio;
   final String? imageUrl;
+  final String? phone;
   final List<String> subCategories;
 
   Artisan({
@@ -16,6 +17,7 @@ class Artisan {
     required this.category,
     this.bio,
     this.imageUrl,
+    this.phone,
     this.subCategories = const [],
   });
 
@@ -34,6 +36,7 @@ class Artisan {
       category: _parseString(json['x_main_category']),
       bio: json['comment'] is String ? json['comment'] : null,
       imageUrl: json['image_1920'] is String ? json['image_1920'] : null,
+      phone: _parseString(json['phone'] ?? json['mobile']),
     );
   }
 }
