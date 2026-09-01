@@ -1,10 +1,16 @@
 import 'dart:ui';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'odoo_client.dart';
-import '../../features/catalog/models/product.dart';
+
 import '../../features/catalog/models/artisan.dart';
+import '../../features/catalog/models/product.dart';
+import '../offline/catalog_cache.dart';
+import 'odoo_client.dart';
 
 final odooClientProvider = Provider((ref) => OdooClient());
+final offlineCatalogCacheProvider = Provider<OfflineCatalogCache>(
+  (ref) => OfflineCatalogCache.disabled(),
+);
 
 final odooLocaleProvider = Provider<String>((ref) {
   final locale = PlatformDispatcher.instance.locale;
@@ -13,9 +19,15 @@ final odooLocaleProvider = Provider<String>((ref) {
 
 final artisansProvider = FutureProvider<List<Artisan>>((ref) async {
   final client = ref.watch(odooClientProvider);
+  final cache = ref.watch(offlineCatalogCacheProvider);
   final lang = ref.watch(odooLocaleProvider);
   final rawArtisans = await client.fetchArtisans(langCode: lang);
-  return rawArtisans.map((json) => Artisan.fromJson(json)).toList();
+  final artisans = rawArtisans.map((json) => Artisan.fromJson(json)).toList();
+  if (artisans.isNotEmpty) {
+    await cache.saveArtisans(artisans);
+    return artisans;
+  }
+  return cache.readArtisans();
 });
 
 final categoriesProvider = FutureProvider<List<dynamic>>((ref) async {
@@ -33,10 +45,16 @@ final productsByArtisanProvider = FutureProvider.family<List<Product>, int>((ref
 
 final allProductsProvider = FutureProvider<List<Product>>((ref) async {
   final client = ref.watch(odooClientProvider);
+  final cache = ref.watch(offlineCatalogCacheProvider);
   final lang = ref.watch(odooLocaleProvider);
   final rawProducts = await client.fetchAllProducts(langCode: lang);
-  return rawProducts.map((json) {
+  final products = rawProducts.map((json) {
     final compId = (json['company_id'] is List) ? json['company_id'][0] : 0;
     return Product.fromJson(json, compId);
   }).toList();
+  if (products.isNotEmpty) {
+    await cache.saveProducts(products);
+    return products;
+  }
+  return cache.readProducts();
 });

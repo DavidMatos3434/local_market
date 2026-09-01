@@ -11,9 +11,17 @@ import 'package:local_market/features/catalog/models/artisan.dart';
 import 'package:local_market/features/catalog/models/product.dart';
 
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:local_market/core/offline/catalog_cache.dart';
 
-void main() {
-  runApp(const ProviderScope(child: LocalMarketApp()));
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final cache = await OfflineCatalogCache.open();
+  runApp(
+    ProviderScope(
+      overrides: [offlineCatalogCacheProvider.overrideWithValue(cache)],
+      child: const LocalMarketApp(),
+    ),
+  );
 }
 
 final _router = GoRouter(
